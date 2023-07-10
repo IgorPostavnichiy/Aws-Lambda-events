@@ -17,7 +17,7 @@ def is_self_invocation(detail):
 
     return False
 
-def handler(event, context):
+def lambda_handler(event, context):
 
     if 'detail' in event:
         detail = event['detail']
@@ -31,23 +31,23 @@ def handler(event, context):
                 if detail['requestParameters']['eventName'] == 'TerminateInstances':
                     instance_ids = [i['instanceId'] for i in detail['resources']]
                     for instance_id in instance_ids:
-                        bucket_name = 'aws-lambda-bucket-janiator'  # Замените на имя вашего S3-ведра
+                        bucket_name = 'aws-lambda-bucket-janiator'  # Replace with the name of your S3 bucket
                         bucket = s3.Bucket(bucket_name)
                         objects = list(bucket.objects.all())
                         
                         if objects:
-                            # Очистка S3-ведра, если в нем есть объекты
+                            # Clearing the S3 bucket if it contains objects
                             bucket.delete_objects(
                                 Delete={
                                     'Objects': [{'Key': obj.key} for obj in objects]
                                 }
                             )
-                            print(f"Удалены объекты из S3-ведра {bucket_name}")
+                            print(f"Removed objects from the S3 bucket {bucket_name}")
                             
-                        # Удаление S3-ведра, если он пустой
+                        # Deleting an S3 bucket if it is empty
                         if len(list(bucket.objects.all())) == 0:
                             bucket.delete()
-                            print(f"S3-ведро {bucket_name} удалено")
+                            print(f"S3-bucket {bucket_name} deleted")
 
     return json.dumps({
         'result': 'SUCCESS',
