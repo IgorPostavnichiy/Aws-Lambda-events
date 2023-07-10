@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >
-    An example Lambda deployment using CloudFormation. Includes a DynamoDB table for the function to interact with.
+    An example Lambda deployment using CloudFormation.
     https://github.com/IgorPostavnichiy/Aws-Lambda-events
 Parameters:
   LambdaFunctionName:
@@ -9,7 +9,7 @@ Parameters:
     MaxLength: '64'
     AllowedPattern: '[a-zA-Z][a-zA-Z0-9_-]*'
     Description: The name of the Lambda function to be deployed
-    Default: Lambda-DynamoDB-Function-CFNExample
+    Default: Lambda-Function-CFNExample
   LambdaRoleName:
     Type: String
     MinLength: '1'
@@ -23,39 +23,15 @@ Parameters:
     MaxLength: '128'
     AllowedPattern: '[\w+=,.@-]+'
     Default: Lambda-Policy-CFNExample
-  DynamoDBTableName:
-    Type: String
-    MinLength: '3'
-    MaxLength: '255'
-    AllowedPattern: '[a-zA-Z0-9_.-]+'
-    Description: The name of the DynamoDB table to be deployed
-    Default: DynamoDB-Table-CFNExample
-  DynamoDBPKName:
-    Type: String
-    MinLength: '1'
-    MaxLength: '255'
-    AllowedPattern: '[a-zA-Z][a-zA-Z0-9_-]*'
-    Description: The name of the primary key that will exist in the DynamoDB table
-    Default: itemId
-
 Resources:
-  DynamoDBTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Ref DynamoDBTableName
-      KeySchema:
-        - AttributeName: !Ref DynamoDBPKName
-          KeyType: HASH
-      ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Ref LambdaRoleName
       Description: An execution role for a Lambda function launched by CloudFormation
       ManagedPolicyArns:
-        - !Ref LambdaPolicy
+        - !Ref LambdaPolicyName
+
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -73,10 +49,6 @@ Resources:
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
-          - Effect: Allow
-            Action:
-              - 'dynamodb:PutItem'
-            Resource: !Sub 'arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTable}'
           - Effect: Allow
             Action:
               - 'logs:CreateLogStream'
@@ -157,8 +129,6 @@ Resources:
       Timeout: 60
       MemorySize: 128
       Role: !GetAtt LambdaRole.Arn
-      Environment:
-        Variables:
-          DynamoDBTable: !Ref DynamoDBTableName
-          DynamoDBPrimaryKey: !Ref DynamoDBPKName
+
+
 
