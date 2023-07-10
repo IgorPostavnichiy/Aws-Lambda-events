@@ -1,29 +1,153 @@
+AWSTemplateFormatVersion: 
+Description: >
+    An example Lambda deployment using CloudFormation. Includes a DynamoDB table for the function to interact with.
+    https://github.com/IgorPostavnichiy/Aws-Lambda-events
+Parameters:
+  LambdaFunctionName:
+    Type: String
+    MinLength: '1'
+    MaxLength: '64'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9_-]*'
+    Description: The name of the Lambda function to be deployed
+    Default: Lambda-DynamoDB-Function-CFNExample
+  LambdaRoleName:
+    Type: String
+    MinLength: '1'
+    MaxLength: '64'
+    AllowedPattern: '[\w+=,.@-]+'
+    Description: The name of the IAM role used as the Lambda execution role
+    Default: Lambda-Role-CFNExample
+  LambdaPolicyName:
+    Type: String
+    MinLength: '1'
+    MaxLength: '128'
+    AllowedPattern: '[\w+=,.@-]+'
+    Default: Lambda-Policy-CFNExample
+  DynamoDBTableName:
+    Type: String
+    MinLength: '3'
+    MaxLength: '255'
+    AllowedPattern: '[a-zA-Z0-9_.-]+'
+    Description: The name of the DynamoDB table to be deployed
+    Default: DynamoDB-Table-CFNExample
+  DynamoDBPKName:
+    Type: String
+    MinLength: '1'
+    MaxLength: '255'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9_-]*'
+    Description: The name of the primary key that will exist in the DynamoDB table
+    Default: itemId
+
 Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref LambdaRoleName
+      Description: An execution role for a Lambda function launched by CloudFormation
+      ManagedPolicyArns:
+        - !Ref LambdaPolicy
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+
+  LambdaPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Ref LambdaPolicyName
+      Description: Managed policy for a Lambda function launched by CloudFormation
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'dynamodb:PutItem'
+            Resource: !Sub 'arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTable}'
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogStream'
+              - 'logs:PutLogEvents'
+            Resource: !Join ['',['arn:', !Ref AWS::Partition, ':logs:', !Ref AWS::Region, ':', !Ref AWS::AccountId, ':log-group:/aws/lambda/', !Ref LambdaFunctionName, ':*']]
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogGroup'
+            Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*'
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Join ['',['/aws/lambda/', !Ref LambdaFunctionName]]
+      RetentionInDays: 30
+
   MyLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket: my-lambda-bucket
-        S3Key: lambda_function.zip
+        ZipFile: |
+          import boto3
+          import json
+
+          sts = boto3.client('sts')
+          s3 = boto3.resource('s3')
+
+          def is_self_invocation(detail):
+              try:
+                  identity = sts.get_caller_identity()
+                  if 'userIdentity' in detail:
+                      if 'arn' in detail['userIdentity'] and 'Arn' in identity:
+                          if identity['Arn'] == detail['userIdentity']['arn']:
+                              return True
+              except ClientError as e:
+                  print('STS Error: {0}'.format(e))
+
+              return False
+
+          def handler(event, context):
+
+              if 'detail' in event:
+                  detail = event['detail']
+                  if is_self_invocation(detail):
+                      return json.dumps({
+                          'result': 'FAILURE',
+                          'data': 'Self invocation via CloudWatch Event'
+                      })
+                  if 'requestParameters' in detail:
+                      if detail['requestParameters']['eventType'] == 'AwsApiCall':
+                          if detail['requestParameters']['eventName'] == 'TerminateInstances':
+                              instance_ids = [i['instanceId'] for i in detail['resources']]
+                              for instance_id in instance_ids:
+                                  bucket_name = 'aws-lambda-bucket-janiator'  # Замените на имя вашего S3-ведра yaml
+                                  bucket = s3.Bucket(bucket_name)
+                                  objects = list(bucket.objects.all())
+
+                                  if objects:
+                                      # Очистка S3-ведра, если в нем есть объекты
+                                      bucket.delete_objects(
+                                          Delete={
+                                              'Objects': [{'Key': obj.key} for obj in objects]
+                                          }
+                                      )
+                                      print(f"Удалены объекты из S3-ведра {bucket_name}")
+
+                                  # Удаление S3-ведра, если он пустой
+                                  if len(list(bucket.objects.all())) == 0:
+                                      bucket.delete()
+                                      print(f"S3-ведро {bucket_name} удалено")
+
+              return json.dumps({
+                  'result': 'SUCCESS',
+                  'data': 'It worked!'
+              })
       Handler: lambda_function.handler
       Runtime: python3.8
       Timeout: 60
       MemorySize: 128
-
-  MyS3Bucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: my-lambda-bucket
-
-  MyLambdaPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !GetAtt MyLambdaFunction.Arn
-      Action: lambda:InvokeFunction
-      Principal: s3.amazonaws.com
-      SourceAccount: !Ref AWS::AccountId
-      SourceArn: !Join [":", ["arn:aws:s3:::", !Ref MyS3Bucket]]
-
-Outputs:
-  MyLambdaFunctionArn:
-    Value: !GetAtt MyLambdaFunction.Arn
+      Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          DynamoDBTable: !Ref DynamoDBTableName
+          DynamoDBPrimaryKey: !Ref DynamoDBPKName
