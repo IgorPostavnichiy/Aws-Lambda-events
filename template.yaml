@@ -90,7 +90,7 @@ Resources:
         ZipFile: |
           import boto3
           import json
-        # Set up clients and resources
+
           sts = boto3.client('sts')
           s3 = boto3.resource('s3')
 
@@ -107,14 +107,13 @@ Resources:
               return False
 
           def handler(event, context):
-
               if 'detail' in event:
                   detail = event['detail']
                   if is_self_invocation(detail):
                       return json.dumps({
                           'result': 'FAILURE',
                           'data': 'Self invocation via CloudWatch Event'
-                      )
+                      })
                   if 'requestParameters' in detail:
                       if detail['requestParameters']['eventType'] == 'AwsApiCall':
                           if detail['requestParameters']['eventName'] == 'TerminateInstances':
@@ -128,7 +127,9 @@ Resources:
                                       # Clearing the S3 bucket if it contains objects
                                       bucket.delete_objects(
                                           Delete={
-                                              'Objects': [{'Key': obj.key} for obj in objects]})
+                                              'Objects': [{'Key': obj.key} for obj in objects]
+                                          }
+                                      )
                                       print(f"Removed objects from the S3 bucket {bucket_name}")
 
                                   # Deleting an S3 bucket if it is empty
@@ -138,7 +139,9 @@ Resources:
 
               return json.dumps({
                   'result': 'SUCCESS',
-                  'data': 'It worked!'})
+                  'data': 'It worked!'
+              })
+
       Handler: lambda_function.handler
       Runtime: python3.8
       Timeout: 60
@@ -148,3 +151,4 @@ Resources:
         Variables:
           DynamoDBTable: !Ref DynamoDBTableName
           DynamoDBPrimaryKey: !Ref DynamoDBPKName
+
