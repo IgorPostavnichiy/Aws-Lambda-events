@@ -39,6 +39,16 @@ Parameters:
     Default: itemId
 
 Resources:
+  DynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref DynamoDBTableName
+      KeySchema:
+        - AttributeName: !Ref DynamoDBPKName
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
