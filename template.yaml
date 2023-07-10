@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: 
+AWSTemplateFormatVersion: 2010-09-09
 Description: >
     An example Lambda deployment using CloudFormation. Includes a DynamoDB table for the function to interact with.
     https://github.com/IgorPostavnichiy/Aws-Lambda-events
