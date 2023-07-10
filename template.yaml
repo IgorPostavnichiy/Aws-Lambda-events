@@ -30,7 +30,7 @@ Resources:
       RoleName: !Ref LambdaRoleName
       Description: An execution role for a Lambda function launched by CloudFormation
       ManagedPolicyArns:
-        - !Ref LambdaPolicyName
+        - !Ref LambdaPolicy
 
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
