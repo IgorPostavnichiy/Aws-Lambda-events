@@ -31,7 +31,7 @@ def handler(event, context):
                 if detail['requestParameters']['eventName'] == 'TerminateInstances':
                     instance_ids = [i['instanceId'] for i in detail['resources']]
                     for instance_id in instance_ids:
-                        bucket_name = 'lambda_bucket_test'  # Замените на имя вашего S3-ведра
+                        bucket_name = 'aws-lambda-bucket-janiator'  # Замените на имя вашего S3-ведра
                         bucket = s3.Bucket(bucket_name)
                         objects = list(bucket.objects.all())
                         
