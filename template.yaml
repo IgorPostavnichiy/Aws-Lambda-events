@@ -72,6 +72,7 @@ Resources:
         ZipFile: |
           import boto3
           import json
+          from botocore.exceptions import ClientError
 
           sts = boto3.client('sts')
           s3 = boto3.resource('s3')
@@ -132,8 +133,8 @@ Resources:
                   'result': 'SUCCESS',
                   'data': 'It worked!'
               })
-              
-      Handler: lambda_function.lambda_handler
+
+      Handler: lambda_handler
       Runtime: python3.8
       Timeout: 60
       MemorySize: 128
