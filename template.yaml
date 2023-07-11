@@ -68,7 +68,7 @@ Resources:
   MyLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-       Code:
+      Code:
         ZipFile: |
           import boto3
           import json
