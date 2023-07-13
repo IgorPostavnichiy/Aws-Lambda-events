@@ -168,3 +168,21 @@ Resources:
       Timeout: 60
       MemorySize: 128
       Role: !GetAtt LambdaRole.Arn
+
+  MyEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Event rule to trigger the Lambda function
+      ScheduleExpression: cron(0 0 * * ? *)  # Adjust the schedule as per your requirements
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt MyLambdaFunction.Arn
+          Id: TargetFunction
+
+  MyEventPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref MyLambdaFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt MyEventRule.Arn
