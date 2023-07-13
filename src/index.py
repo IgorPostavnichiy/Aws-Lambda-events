@@ -22,7 +22,7 @@ def get_bucket_name(instance_id):
     instances = response['Reservations'][0]['Instances']
     for instance in instances:
         for tag in instance['Tags']:
-            if tag['Key'] == 'Bucket':
+            if tag['Key'] == 'S3-Owner':
                 return tag['Value']
     return None
 
