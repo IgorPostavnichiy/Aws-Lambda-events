@@ -123,13 +123,13 @@ Resources:
           def delete_bucket(bucket_name):
               s3_client = boto3.client('s3')
 
-              # Удаление всех объектов в бакете
+              # Deleting all objects in S3-Bucket
               response = s3_client.list_objects_v2(Bucket=bucket_name)
               if 'Contents' in response:
                   objects = [{'Key': obj['Key']} for obj in response['Contents']]
                   s3_client.delete_objects(Bucket=bucket_name, Delete={'Objects': objects})
 
-              # Удаление самого бакета
+              # Removing S3-Bucket
               s3_client.delete_bucket(Bucket=bucket_name)
 
           def lambda_handler(event, context):
