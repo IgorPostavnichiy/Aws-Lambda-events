@@ -53,6 +53,19 @@ def wipe_bucket(bucket):
         return False
 
 
+def delete_bucket(bucket_name):
+    s3_client = boto3.client('s3')
+    
+    # Deleting all objects in S3-Bucket
+    response = s3_client.list_objects_v2(Bucket=bucket_name)
+    if 'Contents' in response:
+        objects = [{'Key': obj['Key']} for obj in response['Contents']]
+        s3_client.delete_objects(Bucket=bucket_name, Delete={'Objects': objects})
+    
+    # Removing S3-Bucket
+    s3_client.delete_bucket(Bucket=bucket_name)
+
+
 def lambda_handler(event, context):
     if 'detail' in event:
         detail = event['detail']
@@ -85,6 +98,8 @@ def lambda_handler(event, context):
                             logger.info(f"Removed objects from the S3 bucket {bucket.name}")
                         except Exception as e:
                             logger.error(f"Error removing objects from S3 bucket {bucket.name}: {str(e)}")
+                    else:
+                        logger.info(f"S3 bucket {bucket.name} is empty, skipping deletion")
 
                     # Deleting the S3 bucket if it is empty
                     if len(list(bucket.objects.all())) == 0:
