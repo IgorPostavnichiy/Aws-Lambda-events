@@ -86,13 +86,15 @@ def lambda_handler(event, context):
                         except Exception as e:
                             logger.error(f"Error removing objects from S3 bucket {bucket.name}: {str(e)}")
 
-                        # Deleting the S3 bucket if it is empty
-                        if len(list(bucket.objects.all())) == 0:
-                            try:
-                                bucket.delete()
-                                logger.info(f"S3 bucket {bucket.name} deleted")
-                            except Exception as e:
-                                logger.error(f"Error deleting S3 bucket {bucket.name}: {str(e)}")
+                    # Deleting the S3 bucket if it is empty
+                    if len(list(bucket.objects.all())) == 0:
+                        try:
+                            bucket.delete()
+                            logger.info(f"S3 bucket {bucket.name} deleted")
+                        except Exception as e:
+                            logger.error(f"Error deleting S3 bucket {bucket.name}: {str(e)}")
+                    else:
+                        logger.info(f"S3 bucket {bucket.name} is not empty, skipping deletion")
 
     return json.dumps({
         'result': 'SUCCESS',
