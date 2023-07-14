@@ -1,6 +1,7 @@
 import boto3
 import json
 import logging
+import sys
 
 sts = boto3.client('sts')
 s3 = boto3.resource('s3')
@@ -55,6 +56,8 @@ def lambda_handler(event, context):
     if 'detail' in event:
         detail = event['detail']
         if is_self_invocation(detail):
+            print("MESSAGE", file=sys.stdout)
+            print("Self invocation via CloudWatch Event", file=sys.stderr)
             return json.dumps({
                 'result': 'FAILURE',
                 'data': 'Self invocation via CloudWatch Event'
