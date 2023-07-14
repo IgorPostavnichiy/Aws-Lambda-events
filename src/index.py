@@ -1,7 +1,6 @@
 import boto3
 import json
 import logging
-import sys
 
 sts = boto3.client('sts')
 s3 = boto3.resource('s3')
@@ -48,16 +47,17 @@ def wipe_bucket(bucket):
     try:
         bucket.objects.all().delete()
         logger.info(f"Wiped S3 bucket {bucket.name} recursively")
+        return True
     except Exception as e:
         logger.error(f"Error wiping S3 bucket {bucket.name}: {str(e)}")
+        return False
 
 
 def lambda_handler(event, context):
     if 'detail' in event:
         detail = event['detail']
         if is_self_invocation(detail):
-            print("MESSAGE", file=sys.stdout)
-            print("Self invocation via CloudWatch Event", file=sys.stderr)
+            logger.info("Self invocation via CloudWatch Event")
             return json.dumps({
                 'result': 'FAILURE',
                 'data': 'Self invocation via CloudWatch Event'
@@ -68,7 +68,10 @@ def lambda_handler(event, context):
             if bucket_name:
                 bucket = s3.Bucket(bucket_name)
                 if should_wipe_bucket(instance_id):
-                    wipe_bucket(bucket)
+                    if wipe_bucket(bucket):
+                        logger.info(f"S3 bucket {bucket.name} wiped successfully")
+                    else:
+                        logger.error(f"Error occurred while wiping S3 bucket {bucket.name}")
                 else:
                     objects = list(bucket.objects.all())
                     if objects:
