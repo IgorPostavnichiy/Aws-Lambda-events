@@ -175,8 +175,7 @@ Resources:
       EventPattern:
         source:
           - aws.ec2
-        detail-type:
-          - EC2 Instance State-change Notification
+        detail-type: EC2 Instance State-change Notification
       State: ENABLED
       Targets:
         - Arn: !GetAtt MyLambdaFunction.Arn
@@ -184,13 +183,5 @@ Resources:
 
   MyEventPermission:
     Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Ref MyLambdaFunction
-      Action: lambda:InvokeFunction
-      Principal: events.amazonaws.com
-      SourceArn: !GetAtt MyEventRule.Arn
-
-Outputs:
-  LambdaFunctionName:
-    Description: The name of the deployed Lambda function
-    Value: !Ref MyLambdaFunction
+    Properties
+s
