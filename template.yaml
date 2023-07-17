@@ -33,7 +33,7 @@ Resources:
             Action:
               - 'logs:CreateLogStream'
               - 'logs:PutLogEvents'
-            Resource: !Join ['',['arn:', !Ref 'AWS::Partition', ':logs:', !Ref 'AWS::Region', ':', !Ref 'AWS::AccountId', ':log-group:/aws/lambda/', !Ref 'MyLambdaFunction', ':*']]
+            Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*'
           - Effect: Allow
             Action: 'logs:CreateLogGroup'
             Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*'
@@ -41,13 +41,13 @@ Resources:
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Join ['',['/aws/lambda/', !Ref 'MyLambdaFunction']]
+      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-MyLambdaFunction'
       RetentionInDays: 30
 
   MyLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: Lambda-Function-CFNExample
+      FunctionName: !Sub "${AWS::StackName}-MyLambdaFunction"
       Code:
         ZipFile: |
           import boto3
@@ -175,7 +175,8 @@ Resources:
       EventPattern:
         source:
           - aws.ec2
-        detail-type: EC2 Instance State-change Notification
+        detail-type:
+          - EC2 Instance State-change Notification
       State: ENABLED
       Targets:
         - Arn: !GetAtt MyLambdaFunction.Arn
