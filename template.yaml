@@ -1,32 +1,7 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >
-    An example Lambda deployment using CloudFormation.
-    https://github.com/IgorPostavnichiy/Aws-Lambda-events
-
-Parameters:
-  LambdaFunctionName:
-    Type: String
-    MinLength: '1'
-    MaxLength: '64'
-    AllowedPattern: '[a-zA-Z][a-zA-Z0-9_-]*'
-    Description: The name of the Lambda function to be deployed
-    Default: Lambda-Function-CFNExample
-
-  LambdaRoleName:
-    Type: String
-    MinLength: '1'
-    MaxLength: '64'
-    AllowedPattern: '[\w+=,.@-]+'
-    Description: The name of the IAM role used as the Lambda execution role
-    Default: Lambda-Role-CFNExample
-
-  LambdaPolicyName:
-    Type: String
-    MinLength: '1'
-    MaxLength: '128'
-    AllowedPattern: '[\w+=,.@-]+'
-    Description: The name of the IAM policy used for the Lambda function
-    Default: Lambda-Policy-CFNExample
+  An example Lambda deployment using CloudFormation.
+  https://github.com/IgorPostavnichiy/Aws-Lambda-events
 
 Resources:
   LambdaRole:
@@ -72,7 +47,7 @@ Resources:
   MyLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Ref LambdaFunctionName
+      FunctionName: Lambda-Function-CFNExample
       Code:
         ZipFile: |
           import boto3
