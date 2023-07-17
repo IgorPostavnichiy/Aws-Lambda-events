@@ -79,7 +79,7 @@ Resources:
           import boto3
           import json
           import logging
-          
+
           sts = boto3.client('sts')
                     s3 = boto3.resource('s3')
                     ec2 = boto3.client('ec2')
@@ -193,10 +193,7 @@ Resources:
       MemorySize: 128
       Role: !GetAtt LambdaRole.Arn
 
-Outputs:
-  LambdaFunctionName:
-    Value: !GetAtt MyLambdaFunction.FunctionName
-MyEventRule:
+  MyEventRule:
     Type: AWS::Events::Rule
     Properties:
       Description: Event rule to trigger the Lambda function
@@ -217,3 +214,8 @@ MyEventRule:
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
       SourceArn: !GetAtt MyEventRule.Arn
+
+Outputs:
+  LambdaFunctionName:
+    Description: The name of the deployed Lambda function
+    Value: !Ref MyLambdaFunction
