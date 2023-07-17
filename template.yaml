@@ -182,10 +182,10 @@ Resources:
                                   else:
                                       logger.info(f"S3 bucket {bucket.name} is not empty, skipping deletion")
 
-          return json.dumps({
-                'result': 'SUCCESS',
-                'data': 'It worked!'
-          })
+              return json.dumps({
+                  'result': 'SUCCESS',
+                  'data': 'It worked!'
+              })
 
       Handler: index.lambda_handler
       Runtime: python3.8
