@@ -80,50 +80,50 @@ Resources:
           import logging
 
           sts = boto3.client('sts')
-                    s3 = boto3.resource('s3')
-                    ec2 = boto3.client('ec2')
+          s3 = boto3.resource('s3')
+          ec2 = boto3.client('ec2')
 
-                    logger = logging.getLogger()
-                    logger.setLevel(logging.INFO)
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
 
-                    def is_self_invocation(detail):
-                        try:
-                            identity = sts.get_caller_identity()
-                            if 'userIdentity' in detail:
-                                if 'arn' in detail['userIdentity'] and 'Arn' in identity:
-                                    if identity['Arn'] == detail['userIdentity']['arn']:
-                                        return True
-                        except ClientError as e:
-                            logger.error('STS Error: {0}'.format(e))
+          def is_self_invocation(detail):
+              try:
+                  identity = sts.get_caller_identity()
+                  if 'userIdentity' in detail:
+                      if 'arn' in detail['userIdentity'] and 'Arn' in identity:
+                          if identity['Arn'] == detail['userIdentity']['arn']:
+                              return True
+                except ClientError as e:
+                    logger.error('STS Error: {0}'.format(e))
 
-                        return False
+                return False
 
-                    def get_bucket_name(instance_id):
-                        response = ec2.describe_instances(InstanceIds=[instance_id])
-                        instances = response['Reservations'][0]['Instances']
-                        for instance in instances:
-                            for tag in instance['Tags']:
-                                if tag['Key'] == 'S3-Owner':
-                                    return tag['Value']
-                        return None
+            def get_bucket_name(instance_id):
+                response = ec2.describe_instances(InstanceIds=[instance_id])
+                instances = response['Reservations'][0]['Instances']
+                for instance in instances:
+                    for tag in instance['Tags']:
+                        if tag['Key'] == 'S3-Owner':
+                            return tag['Value']
+                return None
 
-                    def should_wipe_bucket(instance_id):
-                        response = ec2.describe_instances(InstanceIds=[instance_id])
-                        instances = response['Reservations'][0]['Instances']
-                        for instance in instances:
-                            for tag in instance['Tags']:
-                                if tag['Key'] == 'S3-Wipe':
-                                    return tag['Value'] == 'true'
-                        return False
+            def should_wipe_bucket(instance_id):
+                response = ec2.describe_instances(InstanceIds=[instance_id])
+                instances = response['Reservations'][0]['Instances']
+                for instance in instances:
+                    for tag in instance['Tags']:
+                        if tag['Key'] == 'S3-Wipe':
+                            return tag['Value'] == 'true'
+                return False
 
-                    def wipe_bucket(bucket):
-                        try:
-                            bucket.objects.all().delete()
-                            logger.info(f"Wiped S3 bucket {bucket.name} recursively")
-                            return True
-                        except Exception as e:
-                            logger.error(f"Error wiping S3 bucket {bucket.name}: {str(e)}")
-                            return False
+            def wipe_bucket(bucket):
+                try:
+                    bucket.objects.all().delete()
+                    logger.info(f"Wiped S3 bucket {bucket.name} recursively")
+                    return True
+                except Exception as e:
+                    logger.error(f"Error wiping S3 bucket {bucket.name}: {str(e)}")
+                    return False
 
                     def delete_bucket(bucket_name):
                         s3_client = boto3.client('s3')
