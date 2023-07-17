@@ -9,7 +9,6 @@ ec2 = boto3.client('ec2')
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-
 def is_self_invocation(detail):
     try:
         identity = sts.get_caller_identity()
@@ -22,7 +21,6 @@ def is_self_invocation(detail):
 
     return False
 
-
 def get_bucket_name(instance_id):
     response = ec2.describe_instances(InstanceIds=[instance_id])
     instances = response['Reservations'][0]['Instances']
@@ -31,7 +29,6 @@ def get_bucket_name(instance_id):
             if tag['Key'] == 'S3-Owner':
                 return tag['Value']
     return None
-
 
 def should_wipe_bucket(instance_id):
     response = ec2.describe_instances(InstanceIds=[instance_id])
@@ -42,7 +39,6 @@ def should_wipe_bucket(instance_id):
                 return tag['Value'] == 'true'
     return False
 
-
 def wipe_bucket(bucket):
     try:
         bucket.objects.all().delete()
@@ -52,19 +48,17 @@ def wipe_bucket(bucket):
         logger.error(f"Error wiping S3 bucket {bucket.name}: {str(e)}")
         return False
 
-
 def delete_bucket(bucket_name):
     s3_client = boto3.client('s3')
-    
+
     # Deleting all objects in S3-Bucket
     response = s3_client.list_objects_v2(Bucket=bucket_name)
     if 'Contents' in response:
         objects = [{'Key': obj['Key']} for obj in response['Contents']]
         s3_client.delete_objects(Bucket=bucket_name, Delete={'Objects': objects})
-    
+
     # Removing S3-Bucket
     s3_client.delete_bucket(Bucket=bucket_name)
-
 
 def lambda_handler(event, context):
     if 'detail' in event:
