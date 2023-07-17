@@ -184,4 +184,3 @@ Resources:
   MyEventPermission:
     Type: AWS::Lambda::Permission
     Properties
-s
