@@ -32,24 +32,25 @@ Resources:
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Ref LambdaRoleName
+      RoleName: !Sub "${AWS::StackName}-Lambda-Role"
       Description: An execution role for a Lambda function launched by CloudFormation
-      ManagedPolicyArns:
-        - !Ref LambdaPolicy
-
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Principal:
               Service: lambda.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonS3ObjectLambdaExecutionRolePolicy
 
   LambdaPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: !Ref LambdaPolicyName
+      ManagedPolicyName: !Sub "${AWS::StackName}-Lambda-Policy"
       Description: Managed policy for a Lambda function launched by CloudFormation
       PolicyDocument:
         Version: '2012-10-17'
@@ -58,10 +59,9 @@ Resources:
             Action:
               - 'logs:CreateLogStream'
               - 'logs:PutLogEvents'
-            Resource: !Join ['',['arn:', !Ref AWS::Partition, ':logs:', !Ref AWS::Region, ':', !Ref AWS::AccountId, ':log-group:/aws/lambda/', !Ref LambdaFunctionName, ':*']]
+            Resource: !Join ['',['arn:', !Ref 'AWS::Partition', ':logs:', !Ref 'AWS::Region', ':', !Ref 'AWS::AccountId', ':log-group:/aws/lambda/', !Ref LambdaFunctionName, ':*']]
           - Effect: Allow
-            Action:
-              - 'logs:CreateLogGroup'
+            Action: 'logs:CreateLogGroup'
             Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*'
 
   LogGroup:
