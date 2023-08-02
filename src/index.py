@@ -95,7 +95,7 @@ def lambda_handler(event, context):
                     else:
                         logger.info(f"S3 bucket {bucket.name} is empty, skipping deletion")
 
-                    # Deleting the S3 bucket if it is empty
+                    # Delete the S3 bucket if it is empty
                     if len(list(bucket.objects.all())) == 0:
                         try:
                             bucket.delete()
